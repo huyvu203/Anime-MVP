@@ -1,430 +1,417 @@
-# Personal Anime Assistant
+# 🎌 Anime Assistant
 
-An AI-powered personal anime assistant with a complete data pipeline for ingesting, processing, and analyzing anime data. Features a multi-agent system using AutoGen and GPT-4o-mini for intelligent conversations about anime recommendations, watch tracking, and discovery.
+An intelligent anime assistant powered by AutoGen multi-agent architecture and GPT-4o-mini. Features a complete data pipeline from Jikan API ingestion through AWS processing to an interactive Streamlit chat interface for anime recommendations and discovery.
 
-## 🎌 Quick Start
+## ✨ Features
 
-1. **Setup Environment**:
-   ```bash
-   # Add your OpenAI API key to .env
-   echo "OPENAI_API_KEY=your_key_here" >> .env
-   
-   # Generate personal watch history
-   poetry run python personal_watch_history.py
-   ```
+- 🤖 **Two-Agent AutoGen System**: User Interface Agent + Data Retrieval Agent
+- 💬 **Interactive Chat Interface**: Streamlit web UI with session management
+- ☁️ **AWS Cloud Architecture**: S3 storage + Glue ETL + Athena SQL queries
+- 📊 **Rich Data**: 1,400+ anime with ratings, genres, episodes, and metadata
+- 🔍 **Smart Queries**: Natural language to SQL conversion for complex searches
+- 📱 **Modern UI**: Clean chat interface with message history and status indicators
 
-2. **Launch Chat Interface**:
-   ```bash
-   # Web UI (Streamlit)
-   poetry run python launch_app.py
-   
-   # Or CLI interface
-   poetry run python anime_assistant.py
-   ```
+## 🚀 Quick Start
 
-3. **Start Chatting**:
-   - "What should I watch next?"
-   - "Show me currently airing anime" 
-   - "Recommend action anime like Attack on Titan"
-   - "What's in my watch history?"
+### Prerequisites
+- Python 3.10+
+- Poetry
+- AWS Account with configured credentials
+- OpenAI API key
 
-## Architecture Overview
+### Installation
+```bash
+# Clone and setup
+git clone <repo-url>
+cd anime_mvp
+poetry install
+
+# Configure environment
+cp .env.example .env
+# Add your OPENAI_API_KEY and AWS credentials to .env
+```
+
+### Launch the App
+```bash
+# Streamlit Web Interface (Recommended)
+poetry run streamlit run streamlit_app.py
+
+# Or CLI Interface
+poetry run python anime_assistant.py
+```
+
+### Try These Queries
+- *"What are the top rated anime?"*
+- *"Show me action anime"*  
+- *"Find anime about attack on titan"*
+- *"What anime is currently airing?"*
+
+## 🏗️ Architecture Overview
 
 ```mermaid
 flowchart TD
-    subgraph Laptop["💻 Laptop (Client)"]
-        A1["Fetch Jikan API JSON"] --> A2["Upload Raw JSON to S3 raw zone"]
+    subgraph "User Interface"
+        UI[🖥️ Streamlit Chat App]
     end
-
-    subgraph AWS["☁️ AWS"]
-        subgraph S3["Amazon S3"]
-            B1["Raw Zone: JSON files"]
-            B2["Processed Zone: CSV/Parquet"]
-        end
-
-        subgraph Glue["AWS Glue Job"]
-            C1["Read Raw JSON from S3"]
-            C2["Flatten + Clean + Encode"]
-            C3["Write Processed CSV/Parquet to S3"]
-        end
+    
+    subgraph "AutoGen Agents"
+        UIA[🧠 User Interface Agent<br/>GPT-4o-mini]
+        DRA[📊 Data Retrieval Agent<br/>Athena SQL Queries]
+        WF[⚡ Sequential Workflow<br/>Coordinator]
     end
-
-    subgraph AutoGen["🤖 AutoGen Agents"]
-        E1["KnowledgeAgent - reads S3 processed data"]
-        E2["RecommendationAgent - reads S3 processed data"]
-        E3["TrendAgent - reads S3 processed data"]
-        E4["EvaluationAgent - reads S3 processed data"]
+    
+    subgraph "Data Pipeline"
+        JIKAN[🌐 Jikan API]
+        S3RAW[📁 S3 Raw Data<br/>JSON Files]
+        GLUE[⚙️ AWS Glue ETL<br/>Data Processing]
+        S3PROC[📁 S3 Processed Data<br/>CSV Files]
+        ATHENA[🔍 AWS Athena<br/>SQL Database]
     end
-
-    A1 --> A2 --> B1
-    B1 --> C1 --> C2 --> C3 --> B2
-    B2 --> AutoGen
+    
+    UI --> WF
+    WF --> UIA
+    UIA --> DRA
+    DRA --> ATHENA
+    ATHENA --> S3PROC
+    
+    JIKAN --> S3RAW
+    S3RAW --> GLUE
+    GLUE --> S3PROC
 ```
 
-## Project Structure
+### Agent Communication Flow
+1. **User** asks question in Streamlit chat
+2. **Sequential Workflow** coordinates agent communication
+3. **User Interface Agent** converts natural language to structured requests
+4. **Data Retrieval Agent** executes SQL queries via Athena
+5. **Results** flow back through agents and display in chat UI
+
+## 📁 Project Structure
 
 ```
 anime_mvp/
-├── src/
-│   ├── ingestion/
-│   │   └── fetch_jikan.py      # Jikan API fetcher
-│   ├── preprocessing/
-│   │   └── glue_flatten.py     # AWS Glue job script
+├── 🖥️ User Interfaces
+│   ├── streamlit_app.py           # Main Streamlit web chat interface
+│   ├── anime_assistant.py         # CLI chat interface
+│   └── launch_streamlit.py        # Streamlit launcher script
+│
+├── 🤖 Agent System  
+│   ├── sequential_workflow.py     # AutoGen workflow coordinator
+│   └── src/agents/
+│       ├── user_interface_agent.py    # Natural language processor
+│       └── data_retrieval_agent.py    # Athena query executor
+│
+├── ☁️ Data Infrastructure
+│   ├── src/ingestion/
+│   │   └── fetch_jikan.py         # Jikan API data fetcher
+│   ├── src/glue/
+│   │   ├── anime_etl.py           # AWS Glue ETL job
+│   │   └── deploy_glue_job.py     # Glue deployment script
+│   └── src/data/
+│       ├── athena_client.py       # Athena SQL query client
+│       └── s3_reader.py           # S3 data access utilities
+│
+├── 🧪 Testing & Validation
+│   └── tests/
+│       ├── agents/                # Agent-specific tests
+│       ├── data/                  # Data pipeline tests  
+│       ├── integration/           # End-to-end tests
+│       └── infrastructure/        # AWS service tests
+│
+├── 📊 Data Storage
 │   └── data/
-│       └── s3_reader.py        # S3 data reader for agents
-├── tests/
-│   └── test_pipeline.py        # Unit and integration tests
-├── data/
-│   └── raw/                    # Local backup directory
-├── pyproject.toml             # Poetry configuration and dependencies
-├── .env.example               # Environment variables template
-└── README.md                  # This file
+│       ├── raw/                   # Local Jikan API backup
+│       └── user_history.db        # SQLite user preferences
+│
+├── 📋 Configuration
+│   ├── pyproject.toml             # Poetry dependencies
+│   ├── .env.example               # Environment template
+│   └── .gitignore                 # Git ignore patterns
 ```
 
-## Data Sources
+## 🤖 Agent Architecture
 
-The pipeline fetches data from multiple Jikan API endpoints:
+### User Interface Agent
+- **Model**: GPT-4o-mini (temperature: 0.7)
+- **Function**: Converts natural language queries into structured data requests
+- **Capabilities**: 
+  - Query type classification (search_title, genre_filter, top_rated, etc.)
+  - Parameter extraction and validation
+  - Response formatting and presentation
 
-| Endpoint | Purpose | MVP Dataset Size |
-|----------|---------|------------------|
-| `/genres/anime` | Master list of anime genres | Static list (~50 genres) |
-| `/top/anime` | Popular anime rankings | 5 pages (~250 anime) |
-| `/seasons/{year}/{season}` | Seasonal anime releases | Current + 2 previous seasons (~400 anime) |
-| `/anime/{id}` | Detailed anime metadata | For each collected anime |
-| `/anime/{id}/statistics` | Viewing statistics | For each collected anime |
-| `/anime/{id}/recommendations` | Related anime recommendations | Top 10 per anime |
+### Data Retrieval Agent  
+- **Backend**: AWS Athena SQL queries
+- **Function**: Executes structured queries against processed anime database
+- **Capabilities**:
+  - Title search with fuzzy matching
+  - Genre-based filtering
+  - Top-rated anime ranking
+  - Currently airing anime status
+  - Statistical analysis and aggregation
 
-Total unique anime processed: ~500-600 entries for MVP dataset.
+### Sequential Workflow Coordinator
+- **Pattern**: AutoGen sequential agent communication
+- **Function**: Orchestrates multi-agent conversations
+- **Flow**: User Query → UI Agent → Data Agent → UI Agent → Response
 
-## Features
+## 📊 Data Pipeline
 
-- **Robust API Ingestion**: Fetches anime data from multiple Jikan API endpoints with retry logic and rate limiting
-- **Cloud Storage**: Raw JSON and processed CSV files stored in S3 with organized date-based structure  
-- **Data Processing**: AWS Glue job for flattening and normalizing JSON data into analysis-ready CSV files
-- **Direct S3 Access**: AutoGen agents read processed data directly from S3 (no database required)
-- **Error Handling**: Comprehensive error handling and logging throughout the pipeline
-- **Testing**: Unit tests with mocked AWS services for local development
-- **Monitoring**: Detailed execution statistics and logging
-- **Scalable**: Serverless architecture that scales automatically with data volume
+### Data Sources (Jikan API)
+| Endpoint | Purpose | Dataset Size |
+|----------|---------|--------------|
+| `/top/anime` | Popular rankings | ~1,400 anime |
+| `/anime/{id}` | Detailed metadata | Full anime details |
+| `/anime/{id}/statistics` | View statistics | User engagement data |
+| `/genres/anime` | Genre taxonomy | ~50 categories |
 
-## Quick Start
+### Processing Pipeline
+1. **Ingestion**: `fetch_jikan.py` → Raw JSON files → S3 bucket
+2. **ETL**: AWS Glue job → Flatten & clean → CSV format
+3. **Storage**: S3 processed data → Athena tables → SQL queries
+4. **Access**: Agents query via `AthenaQueryClient` → Structured results
 
-### Prerequisites
+## 🛠️ Development Setup
 
-- Python 3.9+
-- Poetry (for dependency management)
-- AWS Account with appropriate permissions
-- S3 bucket for data storage
+### Data Pipeline Setup (One-time)
 
-### Installation
-
-1. Clone the repository:
+#### 1. Fetch Anime Data
 ```bash
-git clone <repository-url>
-cd anime_mvp
-```
-
-2. Install Poetry (if not already installed):
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
-```
-
-3. Install dependencies with Poetry:
-```bash
-poetry install
-```
-
-4. Activate the virtual environment:
-```bash
-poetry shell
-```
-
-5. Configure environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your AWS credentials and S3 bucket name
-```
-
-### Usage
-
-#### 1. Fetch Anime Data from Jikan API
-
-```bash
-# Fetch complete MVP dataset (recommended)
-poetry run fetch-anime --mvp
-
-# Or directly with Python  
+# Fetch anime data from Jikan API
 poetry run python src/ingestion/fetch_jikan.py --mvp
-
-# Fetch specific endpoints only
-poetry run python src/ingestion/fetch_jikan.py --genres-only
-poetry run python src/ingestion/fetch_jikan.py --top-only
-poetry run python src/ingestion/fetch_jikan.py --seasonal-only
-
-# Legacy: Fetch a single anime
-poetry run python src/ingestion/fetch_jikan.py --anime-id 1
-
-# Legacy: Fetch a range of anime (1-100)
-poetry run python src/ingestion/fetch_jikan.py --start-id 1 --end-id 100
 ```
 
-The `--mvp` flag fetches data from all endpoints:
-- **Genres**: Master list (pulled once)
-- **Top Anime**: 5 pages (~250 entries)
-- **Seasonal Anime**: Current season + last 2 seasons (~400 entries)
-- **Anime Details**: Full metadata for all collected anime
-- **Statistics**: Viewing stats for all collected anime
-
-#### 2. Test and Deploy ETL Pipeline
-
-Test locally (no AWS costs):
+#### 2. Deploy ETL Pipeline
 ```bash
-poetry run python test_anime_etl.py
+# Deploy AWS Glue ETL job
+poetry run python src/glue/deploy_glue_job.py
+
+# Run ETL to process data
+poetry run python tests/infrastructure/test_glue_deployment.py
 ```
 
-Test deployment only (minimal AWS costs):
+#### 3. Setup Athena Database
 ```bash
-poetry run python test_quick_deployment.py
+# Create Athena database and tables
+poetry run python tests/data/test_athena_queries.py
 ```
 
-Full end-to-end test (AWS Glue execution costs):
+### Testing the System
+
+#### Individual Agent Tests
 ```bash
-poetry run python test_glue_deployment.py
-```  
-- **Recommendations**: Top 10 recommendations per anime
+# Test User Interface Agent
+poetry run python tests/agents/test_user_interface_agent.py
 
-#### 2. Process Data with AWS Glue
+# Test Data Retrieval Agent  
+poetry run python tests/agents/test_data_retrieval_agent.py
+```
 
-Create and run an AWS Glue job using the `src/preprocessing/glue_flatten.py` script:
-
+#### End-to-End Workflow Test
 ```bash
-# Upload the script to S3 first
-aws s3 cp src/preprocessing/glue_flatten.py s3://your-bucket/scripts/
-
-# Create and run Glue job via AWS Console or CLI
-aws glue create-job \
-    --name anime-data-processor \
-    --role your-glue-role \
-    --command '{
-        "Name": "glueetl",
-        "ScriptLocation": "s3://your-bucket/scripts/glue_flatten.py"
-    }' \
-    --default-arguments '{
-        "--input_path": "s3://anime-data/raw/2024-01-01/",
-        "--output_path": "s3://anime-data/processed/",
-        "--date": "2024-01-01"
-    }'
+# Test complete sequential workflow
+poetry run python sequential_workflow.py
 ```
 
-#### 3. Access Processed Data
-
+#### Web Interface Test
 ```bash
-# Test S3 data reading
-poetry run python src/data/s3_reader.py
-
-# In your agents/applications, use:
-from src.data.s3_reader import S3DataReader
-
-reader = S3DataReader()
-anime_data = reader.read_anime_data()
-stats_data = reader.read_statistics_data()
+# Launch Streamlit app
+poetry run streamlit run streamlit_app.py
+# Visit http://localhost:8501
 ```
 
-## Configuration
+## 🔧 Configuration
 
-### Environment Variables
-
-Copy `.env.example` to `.env` and configure the following variables:
-
-#### Jikan API Configuration
-- `JIKAN_BASE_URL`: Jikan API base URL (default: https://api.jikan.moe/v4)
-- `JIKAN_RATE_LIMIT_DELAY`: Delay between API requests in seconds (default: 1.0)
-
-#### AWS Configuration
-- `AWS_REGION`: AWS region for your resources
-- `AWS_PROFILE`: AWS profile to use (optional)
-- `S3_BUCKET`: S3 bucket name for data storage
-- `S3_RAW_PREFIX`: Prefix for raw data files (default: raw)
-- `S3_PROCESSED_PREFIX`: Prefix for processed data files (default: processed)
-
-#### Processing Configuration
-- `LOG_LEVEL`: Logging level (default: INFO)
-- `DATE`: Processing date (default: current date)
-- `MAX_ANIME_ID`: Maximum anime ID to fetch
-- `BATCH_SIZE`: Batch size for processing
-
-### AWS Permissions
-
-Your AWS credentials need the following permissions:
-
-#### S3 Permissions
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:DeleteObject",
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                "arn:aws:s3:::your-bucket-name",
-                "arn:aws:s3:::your-bucket-name/*"
-            ]
-        }
-    ]
-}
-```
-
-#### Glue Permissions
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "glue:CreateJob",
-                "glue:StartJobRun",
-                "glue:GetJobRun",
-                "glue:GetJobRuns"
-            ],
-            "Resource": "*"
-        }
-    ]
-}
-```
-
-## Data Storage
-
-The simplified architecture stores all processed data in S3:
-
-### S3 Structure
-```
-s3://your-bucket/
-├── raw/
-│   └── 2024-01-01/
-│       ├── anime_1.json
-│       ├── anime_2.json
-│       ├── top_anime_page_1.json
-│       ├── seasonal_2024_fall_page_1.json
-│       ├── statistics_1.json
-│       ├── recommendations_1.json
-│       └── genres.json
-└── processed/
-    └── 2024-01-01/
-        ├── anime.csv
-        ├── statistics.csv
-        ├── recommendations.csv
-        └── genres.csv
-```
-
-### Data Access
-AutoGen agents read processed data directly from S3 using the `S3DataReader` utility:
-- **anime.csv**: Main anime metadata (title, score, episodes, etc.)
-- **statistics.csv**: Viewing statistics (watching, completed, dropped, etc.)
-- **recommendations.csv**: Anime recommendation relationships
-- **genres.csv**: Genre information
-
-## Testing
-
-Run the test suite:
-
+### Required Environment Variables
 ```bash
-# Run all tests
+# .env file
+OPENAI_API_KEY=sk-proj-your-openai-api-key
+AWS_DEFAULT_REGION=us-east-2
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+S3_BUCKET=anime-mvp-data
+```
+
+### AWS Resources Setup
+- **S3 Bucket**: `anime-mvp-data` (or your chosen name)
+- **Athena Database**: `anime_data` 
+- **Athena Tables**: `anime`, `statistics`, `genres`
+- **IAM Permissions**: S3, Athena, Glue access
+
+### Streamlit Configuration
+The app includes session state management for:
+- Chat message history
+- Agent initialization status
+- Error handling and recovery
+
+## 💬 Usage Examples
+
+### Streamlit Chat Interface
+```bash
+poetry run streamlit run streamlit_app.py
+```
+- Clean, modern chat UI
+- Session-persistent message history  
+- Real-time agent status indicators
+- Error handling with helpful messages
+
+### Sample Queries
+| Query Type | Example | Agent Response |
+|------------|---------|----------------|
+| **Top Rated** | *"What are the top rated anime?"* | Returns highest scoring anime with details |
+| **Genre Search** | *"Show me action anime"* | Filters by genre with score rankings |
+| **Title Search** | *"Find anime about attack on titan"* | Fuzzy matching for title searches |
+| **Status Filter** | *"What anime is currently airing?"* | Lists ongoing anime series |
+
+### CLI Interface  
+```bash
+poetry run python anime_assistant.py
+```
+- Terminal-based chat
+- Same agent functionality
+- Useful for development and testing
+
+## 📊 Data Architecture
+
+### S3 Storage Structure
+```
+s3://anime-mvp-data/
+├── raw/2025-09-22/              # Raw Jikan API responses  
+│   ├── anime_1.json
+│   ├── anime_19647.json
+│   ├── top_anime_page_1.json
+│   └── ...
+└── processed/                   # ETL processed data
+    ├── anime.csv               # Main anime dataset (1,401 records)
+    ├── statistics.csv          # User engagement stats  
+    └── genres.csv              # Genre mappings
+```
+
+### Athena Database Schema
+```sql
+-- anime_data.anime table
+CREATE TABLE anime (
+    anime_id BIGINT,
+    title VARCHAR(500),
+    score DOUBLE,
+    year INT,
+    type VARCHAR(50),
+    episodes INT,
+    status VARCHAR(50),
+    genres VARCHAR(1000),
+    synopsis VARCHAR(5000)
+);
+```
+
+### Data Access Pattern
+1. **Agents** → `AthenaQueryClient` → **SQL Queries**
+2. **Athena** → **S3 CSV Files** → **Structured Results**  
+3. **Results** → **Agent Processing** → **User Response**
+
+## 🧪 Testing
+
+### Test Organization
+```bash
+tests/
+├── agents/                    # Agent-specific unit tests
+│   ├── test_user_interface_agent.py
+│   └── test_data_retrieval_agent.py
+├── data/                      # Data pipeline tests
+│   ├── test_athena_queries.py
+│   └── test_local_etl.py  
+├── integration/               # End-to-end tests
+│   └── test_sequential_workflow.py
+└── infrastructure/            # AWS service tests
+    └── test_glue_deployment.py
+```
+
+### Running Tests
+```bash
+# Individual component tests
+poetry run python tests/agents/test_user_interface_agent.py
+poetry run python tests/agents/test_data_retrieval_agent.py
+
+# Integration test
+poetry run python sequential_workflow.py
+
+# Full test suite (when pytest is configured)
 poetry run pytest tests/ -v
-
-# Run specific test file
-poetry run pytest tests/test_pipeline.py -v
-
-# Run with coverage
-poetry run pytest tests/ --cov=src --cov-report=html
-
-# Run linting and formatting
-poetry run black src/ tests/
-poetry run flake8 src/ tests/
-poetry run mypy src/
 ```
 
-The tests use moto to mock AWS services, allowing for local testing without AWS credentials.
-
-## Data Flow
-
-1. **Ingestion** (`fetch_jikan.py`):
-   - Fetches anime data from Jikan API
-   - Implements rate limiting and retry logic
-   - Saves raw JSON to S3 and optional local backup
-
-2. **Processing** (`glue_flatten.py`):
-   - Reads raw JSON files from S3
-   - Flattens nested structures
-   - Cleans and normalizes data
-   - Outputs CSV/Parquet files to S3
-
-3. **Data Access** (`s3_reader.py`):
-   - AutoGen agents read processed files directly from S3
-   - Provides search, filtering, and aggregation capabilities
-   - No database setup or maintenance required
-
-## Monitoring and Logging
-
-- All components include comprehensive logging
-- Execution statistics are collected and reported
-- Failed operations are logged with details
-- S3 uploads include metadata for tracking
-
-## Performance Considerations
-
-- **Rate Limiting**: Respects Jikan API rate limits
-- **Batch Processing**: Processes data in configurable batches
-- **Parallel Processing**: Glue job uses Spark for distributed processing
-- **Bulk Loading**: Uses efficient bulk insert operations for RDS
-- **Indexing**: Database includes optimized indexes for common queries
-
-## Troubleshooting
+## 🔍 Troubleshooting
 
 ### Common Issues
 
-1. **API Rate Limiting**: Increase `JIKAN_RATE_LIMIT_DELAY` if getting too many 429 errors
-2. **S3 Permissions**: Ensure your AWS credentials have proper S3 access
-3. **Glue Job Failures**: Check CloudWatch logs for detailed error messages
-4. **Data Access Issues**: Verify S3 bucket name and processed file paths
+#### Agent Communication
+- **Issue**: UI Agent response parsing errors
+- **Solution**: Check `sequential_workflow.py` for response format handling
 
-### Debugging
+#### AWS Connectivity
+- **Issue**: Athena query failures
+- **Solution**: Verify AWS credentials and region settings
+- **Check**: `aws sts get-caller-identity` to confirm authentication
 
-Enable debug logging by setting `LOG_LEVEL=DEBUG` in your environment.
+#### Dependencies
+- **Issue**: `ModuleNotFoundError: No module named 'openai'`
+- **Solution**: `poetry install` and ensure virtual environment is active
 
-Check the logs for:
-- API response codes and retry attempts
-- S3 upload confirmations
-- Glue job processing status
-- Data validation errors
-- S3 file access permissions
+#### Streamlit Issues
+- **Issue**: App won't start or shows import errors
+- **Solution**: Check all dependencies installed with `poetry show`
 
-## Future Enhancements
+### Debug Mode
+```bash
+# Enable detailed logging
+export LOG_LEVEL=DEBUG
+poetry run python sequential_workflow.py
+```
 
-- [ ] Add support for additional Jikan API endpoints
-- [ ] Implement incremental data updates
-- [ ] Add data quality validations
-- [ ] Create monitoring dashboard
-- [ ] Add recommendation engine
-- [ ] Implement real-time streaming ingestion
+### Health Checks
+```bash
+# Test individual components
+poetry run python tests/data/test_athena_queries.py      # Check Athena
+poetry run python tests/agents/test_user_interface_agent.py  # Check UI Agent
+poetry run python tests/agents/test_data_retrieval_agent.py  # Check Data Agent
+```
 
-## Contributing
+## 🚀 Future Enhancements
 
+### Near-term Roadmap
+- [ ] **User Personalization**: Watch history tracking and recommendations
+- [ ] **Advanced Queries**: Multi-genre filtering, rating ranges, year filters
+- [ ] **Data Freshness**: Incremental updates from Jikan API
+- [ ] **Performance**: Query caching and response optimization
+
+### Long-term Vision  
+- [ ] **Recommendation Engine**: ML-based anime suggestions
+- [ ] **Social Features**: Shared watch lists and reviews
+- [ ] **Real-time Data**: Live airing status updates
+- [ ] **Mobile App**: React Native or Flutter interface
+
+## 🤝 Contributing
+
+### Development Workflow
 1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+2. Create feature branch: `git checkout -b feature/agent-enhancement`
+3. Add tests for new functionality in appropriate `tests/` subdirectory
+4. Ensure all components work: agents, workflow, and Streamlit UI
+5. Submit pull request with clear description
 
-## License
+### Code Standards
+- Follow existing code patterns in `src/agents/`
+- Add comprehensive logging to new components
+- Test individual agents before integration testing
+- Update README for significant architectural changes
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 📄 License
 
-## Contact
+MIT License - see LICENSE file for details.
 
-For questions or issues, please open an issue on GitHub or contact the maintainers.
+## 📞 Contact
+
+- **Issues**: GitHub Issues for bugs and feature requests
+- **Architecture Questions**: Review `sequential_workflow.py` and agent implementations
+- **AWS Setup**: Check `tests/infrastructure/` for deployment examples
+
+---
+
+*Built with AutoGen 🤖 • AWS ☁️ • Streamlit 🖥️ • GPT-4o-mini 🧠*
