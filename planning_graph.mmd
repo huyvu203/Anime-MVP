@@ -1,0 +1,48 @@
+flowchart TD
+
+    %% --- Data Ingestion ---
+    subgraph Laptop["💻 Laptop (Client)"]
+        A1["Fetch Jikan API JSON"] --> A2["Upload Raw JSON to S3 raw zone"]
+    end
+
+    %% --- AWS Storage & Processing ---
+    subgraph AWS["☁️ AWS"]
+        subgraph S3["Amazon S3"]
+            B1["Raw Zone: JSON files"]
+            B2["Processed Zone: Parquet files"]
+        end
+
+        subgraph GluePython["AWS Glue Python Shell Job"]
+            C1["Read Raw JSON from S3"]
+            C2["Normalize + Clean Data with Pandas"]
+            C3["Write Parquet files to S3"]
+        end
+    end
+
+    %% --- Agents & Tools ---
+    subgraph AutoGen["🤖 AutoGen Agents"]
+        E1["KnowledgeAgent - reads S3 processed data"]
+        E2["RecommendationAgent - reads S3 processed data"]
+        E3["TrendAgent - reads S3 processed data"]
+        E4["EvaluationAgent - reads S3 processed data"]
+    end
+
+    %% --- UI ---
+    subgraph UI["🖥️ Streamlit UI"]
+        F1["User Query"]
+        F2["Final Answer + Visualizations"]
+    end
+
+    %% --- Flows ---
+    A1 --> A2 --> B1
+    B1 --> C1 --> C2 --> C3 --> B2
+    B2 --> AutoGen
+    AutoGen --> F2
+    F1 --> AutoGen
+
+    %% --- Cost & Performance Notes ---
+    classDef costOptimized fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef dataFlow fill:#f3e5f5,stroke:#4a148c,stroke-width:1px
+    
+    class GluePython costOptimized
+    class B1,B2,AutoGen dataFlow

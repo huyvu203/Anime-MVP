@@ -1,0 +1,56 @@
+{
+  "user_profile": "personal_user",
+  "favorites": [
+    {
+      "title": "Attack on Titan",
+      "rating": 10,
+      "genre": "Dark Action"
+    },
+    {
+      "title": "Great Teacher Onizuka",
+      "rating": 9,
+      "genre": "Comedy Drama"
+    },
+    {
+      "title": "Hajime no Ippo",
+      "rating": 9,
+      "genre": "Sports Boxing"
+    },
+    {
+      "title": "Naruto",
+      "rating": 9,
+      "genre": "Ninja Shounen"
+    },
+    {
+      "title": "Clannad: After Story",
+      "rating": 9,
+      "genre": "Drama Romance"
+    },
+    {
+      "title": "Kimi no Na wa",
+      "rating": 9,
+      "genre": "Romance Film"
+    },
+    {
+      "title": "Akira",
+      "rating": 9,
+      "genre": "Cyberpunk Film"
+    },
+    {
+      "title": "3-gatsu no Lion",
+      "rating": 8,
+      "genre": "Slice of Life"
+    },
+    {
+      "title": "Ashita no Joe 2",
+      "rating": 8,
+      "genre": "Sports Boxing"
+    },
+    {
+      "title": "Berserk",
+      "rating": 8,
+      "genre": "Dark Fantasy"
+    }
+  ],
+  "generated_at": "2025-09-29T11:18:43.632618"
+}
