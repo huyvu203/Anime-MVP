@@ -27,6 +27,18 @@ boto3 = ["boto3 (>=1.40.15,<1.40.19)"]
 httpx = ["httpx (>=0.25.1,<0.29)"]
 
 [[package]]
+name = "aiofiles"
+version = "24.1.0"
+description = "File support for asyncio."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "aiofiles-24.1.0-py3-none-any.whl", hash = "sha256:b4ec55f4195e3eb5d7abd1bf7e061763e864dd4954231fb8539a0ef8bb8260e5"},
+    {file = "aiofiles-24.1.0.tar.gz", hash = "sha256:22a075c9e5a3810f0c2e48f3008c94d68c65d763b9b03857924c99e57355166c"},
+]
+
+[[package]]
 name = "aiohappyeyeballs"
 version = "2.6.1"
 description = "Happy Eyeballs for asyncio"
@@ -272,29 +284,29 @@ tests-mypy = ["mypy (>=1.11.1) ; platform_python_implementation == \"CPython\" a
 
 [[package]]
 name = "autogen-agentchat"
-version = "0.7.4"
+version = "0.7.5"
 description = "AutoGen agents and teams library"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "autogen_agentchat-0.7.4-py3-none-any.whl", hash = "sha256:8f62bf2854fa06663d37576500c3ef92f291c61f1d0026a6d60c46fa55292dde"},
-    {file = "autogen_agentchat-0.7.4.tar.gz", hash = "sha256:9e9f0362c70d110479de351f8fc6afd497d9c926bd833f1bfafc118d993734c4"},
+    {file = "autogen_agentchat-0.7.5-py3-none-any.whl", hash = "sha256:d19ca8ec26cb15e071a56c4269140aea2bf3c718bdc7e06f6677af9a905815ba"},
+    {file = "autogen_agentchat-0.7.5.tar.gz", hash = "sha256:8d9c718db52ef24a518806b3a0ef848f0e4c1902877675dc0abed73a8e6e7755"},
 ]
 
 [package.dependencies]
-autogen-core = "0.7.4"
+autogen-core = "0.7.5"
 
 [[package]]
 name = "autogen-core"
-version = "0.7.4"
+version = "0.7.5"
 description = "Foundational interfaces and agent runtime implementation for AutoGen"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "autogen_core-0.7.4-py3-none-any.whl", hash = "sha256:b383d3b2dfe9f5d62e0da0057da6de3cb63259233570e4c85153e33703170afa"},
-    {file = "autogen_core-0.7.4.tar.gz", hash = "sha256:44b4574a378effbf52317e579ae1663602ce9bbb1c699100dec9f3cf19cc9e85"},
+    {file = "autogen_core-0.7.5-py3-none-any.whl", hash = "sha256:4f4a0d3b88a36da75b2ef0d40be2d5e3a207cae7f7d951511e498ad1d68f8ef4"},
+    {file = "autogen_core-0.7.5.tar.gz", hash = "sha256:70c2871389f1d0a7f6db8ef78717a51b7ce877ff4a08a836b7758d604dece203"},
 ]
 
 [package.dependencies]
@@ -307,18 +319,21 @@ typing-extensions = ">=4.0.0"
 
 [[package]]
 name = "autogen-ext"
-version = "0.7.4"
+version = "0.7.5"
 description = "AutoGen extensions library"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "autogen_ext-0.7.4-py3-none-any.whl", hash = "sha256:5afb47c8108168bce7b61eb476ed1bf025548f404da3742d322443fedad79e32"},
-    {file = "autogen_ext-0.7.4.tar.gz", hash = "sha256:1d69b37afa79787b43a401a10c857572d73b1d89e71950087543a81c8df02d27"},
+    {file = "autogen_ext-0.7.5-py3-none-any.whl", hash = "sha256:18cecc8aab37c7c4861fbad038a1017f0ef25e35e273aa158066ccf9d93fea4f"},
+    {file = "autogen_ext-0.7.5.tar.gz", hash = "sha256:711ab9238ea66ff2abef163c331e538092bdea661620727a4a9b2ebce1c22df9"},
 ]
 
 [package.dependencies]
-autogen-core = "0.7.4"
+aiofiles = {version = "*", optional = true, markers = "extra == \"openai\""}
+autogen-core = "0.7.5"
+openai = {version = ">=1.93", optional = true, markers = "extra == \"openai\""}
+tiktoken = {version = ">=0.8.0", optional = true, markers = "extra == \"openai\""}
 
 [package.extras]
 anthropic = ["anthropic (>=0.48)"]
@@ -328,7 +343,7 @@ chromadb = ["chromadb (>=1.0.0)"]
 diskcache = ["diskcache (>=5.6.3)"]
 docker = ["asyncio-atexit (>=1.0.1)", "docker (>=7.0,<8.0)"]
 docker-jupyter-executor = ["aiohttp (>=3.11.16)", "asyncio-atexit (>=1.0.1)", "docker (>=7.0,<8.0)", "requests (>=2.32.3)", "websockets (>=15.0.1)"]
-file-surfer = ["autogen-agentchat (==0.7.4)", "magika (>=0.6.1rc2)", "markitdown[all] (>=0.1.0a3,<0.2.0)"]
+file-surfer = ["autogen-agentchat (==0.7.5)", "magika (>=0.6.1rc2)", "markitdown[all] (>=0.1.0a3,<0.2.0)"]
 gemini = ["google-genai (>=1.0.0)"]
 graphrag = ["graphrag (>=2.3.0)"]
 grpc = ["grpcio (>=1.70.0,<1.71.0)"]
@@ -336,7 +351,7 @@ http-tool = ["httpx (>=0.27.0)", "json-schema-to-pydantic (>=0.2.0)"]
 jupyter-executor = ["ipykernel (>=6.29.5)", "nbclient (>=0.10.2)"]
 langchain = ["langchain-core (>=0.3.3,<0.4.0)"]
 llama-cpp = ["llama-cpp-python (>=0.3.8)"]
-magentic-one = ["autogen-agentchat (==0.7.4)", "magika (>=0.6.1rc2)", "markitdown[all] (>=0.1.0a3,<0.2.0)", "pillow (>=11.0.0)", "playwright (>=1.48.0)"]
+magentic-one = ["autogen-agentchat (==0.7.5)", "magika (>=0.6.1rc2)", "markitdown[all] (>=0.1.0a3,<0.2.0)", "pillow (>=11.0.0)", "playwright (>=1.48.0)"]
 mcp = ["mcp (>=1.11.0)"]
 mem0 = ["mem0ai (>=0.1.98)"]
 mem0-local = ["chromadb (>=1.0.0)", "mem0ai (>=0.1.98)", "neo4j (>=5.25.0)"]
@@ -357,8 +372,8 @@ semantic-kernel-ollama = ["semantic-kernel[ollama] (>=1.17.1)"]
 semantic-kernel-onnx = ["semantic-kernel[onnx] (>=1.17.1)"]
 semantic-kernel-pandas = ["semantic-kernel[pandas] (>=1.17.1)"]
 task-centric-memory = ["chromadb (>=1.0.0)"]
-video-surfer = ["autogen-agentchat (==0.7.4)", "ffmpeg-python", "openai-whisper", "opencv-python (>=4.5)"]
-web-surfer = ["autogen-agentchat (==0.7.4)", "magika (>=0.6.1rc2)", "markitdown[all] (>=0.1.0a3,<0.2.0)", "pillow (>=11.0.0)", "playwright (>=1.48.0)"]
+video-surfer = ["autogen-agentchat (==0.7.5)", "ffmpeg-python", "openai-whisper", "opencv-python (>=4.5)"]
+web-surfer = ["autogen-agentchat (==0.7.5)", "magika (>=0.6.1rc2)", "markitdown[all] (>=0.1.0a3,<0.2.0)", "pillow (>=11.0.0)", "playwright (>=1.48.0)"]
 
 [[package]]
 name = "awswrangler"
@@ -3716,4 +3731,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "48a188b925d376efa940e7d5411746cbe5390ae46c28a200c9f8923fb4fad58c"
+content-hash = "2bd9653f3bf8b3c620667946034666f68b5fba6f22c838a10349444d88952725"
