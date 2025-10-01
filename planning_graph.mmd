@@ -1,48 +1,56 @@
 flowchart TD
-
-    %% --- Data Ingestion ---
-    subgraph Laptop["💻 Laptop (Client)"]
-        A1["Fetch Jikan API JSON"] --> A2["Upload Raw JSON to S3 raw zone"]
+    subgraph "User Interface Layer"
+        UI[🖥️ Streamlit Chat App<br/>streamlit_app.py]
     end
-
-    %% --- AWS Storage & Processing ---
-    subgraph AWS["☁️ AWS"]
-        subgraph S3["Amazon S3"]
-            B1["Raw Zone: JSON files"]
-            B2["Processed Zone: Parquet files"]
-        end
-
-        subgraph GluePython["AWS Glue Python Shell Job"]
-            C1["Read Raw JSON from S3"]
-            C2["Normalize + Clean Data with Pandas"]
-            C3["Write Parquet files to S3"]
-        end
-    end
-
-    %% --- Agents & Tools ---
-    subgraph AutoGen["🤖 AutoGen Agents"]
-        E1["KnowledgeAgent - reads S3 processed data"]
-        E2["RecommendationAgent - reads S3 processed data"]
-        E3["TrendAgent - reads S3 processed data"]
-        E4["EvaluationAgent - reads S3 processed data"]
-    end
-
-    %% --- UI ---
-    subgraph UI["🖥️ Streamlit UI"]
-        F1["User Query"]
-        F2["Final Answer + Visualizations"]
-    end
-
-    %% --- Flows ---
-    A1 --> A2 --> B1
-    B1 --> C1 --> C2 --> C3 --> B2
-    B2 --> AutoGen
-    AutoGen --> F2
-    F1 --> AutoGen
-
-    %% --- Cost & Performance Notes ---
-    classDef costOptimized fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef dataFlow fill:#f3e5f5,stroke:#4a148c,stroke-width:1px
     
-    class GluePython costOptimized
-    class B1,B2,AutoGen dataFlow
+    subgraph "Agent Orchestration"
+        WF[⚡ Sequential Workflow Coordinator<br/>sequential_workflow.py]
+    end
+    
+    subgraph "Two-Agent System"
+        UIA[🧠 User Interface Agent<br/>GPT-4o-mini + OpenAI API<br/>user_interface_agent.py]
+        DRA[📊 Data Retrieval Agent<br/>AthenaQueryClient + SQLite<br/>data_retrieval_agent.py]
+    end
+    
+    subgraph "AWS Data Pipeline"
+        JIKAN[🌐 Jikan API<br/>fetch_jikan.py]
+        S3RAW[📁 S3 Raw Storage<br/>JSON Files]
+        GLUE[⚙️ AWS Glue PySpark ETL<br/>anime_etl.py]
+        S3PROC[📁 S3 Processed Storage<br/>CSV Files]
+        ATHENA[🔍 AWS Athena<br/>SQL Query Engine<br/>athena_client.py]
+    end
+    
+    subgraph "Personal Data Storage"
+        SQLITE[📱 SQLite Database<br/>User Watch History<br/>personal_watch_history.py]
+    end
+    
+    %% User interaction flow
+    UI --> WF
+    WF --> UIA
+    UIA --> DRA
+    DRA --> UIA
+    UIA --> WF
+    WF --> UI
+    
+    %% Data pipeline flow
+    JIKAN --> S3RAW
+    S3RAW --> GLUE
+    GLUE --> S3PROC
+    S3PROC --> ATHENA
+    
+    %% Agent data access
+    DRA --> ATHENA
+    DRA --> SQLITE
+    
+    %% Styling for components
+    classDef userInterface fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef orchestration fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef agents fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef aws fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef personal fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    
+    class UI userInterface
+    class WF orchestration
+    class UIA,DRA agents
+    class JIKAN,S3RAW,GLUE,S3PROC,ATHENA aws
+    class SQLITE personal
