@@ -4,7 +4,7 @@ An intelligent anime assistant powered by AutoGen multi-agent architecture and G
 
 ## ✨ Features
 
-- 🤖 **Two-Agent AutoGen System**: User Interface Agent + Data Retrieval Agent
+- 🤖 **Custom Two-Agent System**: User Interface Agent + Data Retrieval Agent
 - 💬 **Interactive Chat Interface**: Streamlit web UI with session management
 - ☁️ **AWS Cloud Architecture**: S3 storage + Glue ETL + Athena SQL queries
 - 📊 **Rich Data**: 1,400+ anime with ratings, genres, episodes, and metadata
@@ -54,8 +54,8 @@ flowchart TD
         UI[🖥️ Streamlit Chat App]
     end
     
-    subgraph "AutoGen Agents"
-        UIA[🧠 User Interface Agent<br/>GPT-4o-mini]
+    subgraph "Agent System"
+        UIA[🧠 User Interface Agent<br/>GPT-4o-mini + OpenAI API]
         DRA[📊 Data Retrieval Agent<br/>Athena SQL Queries]
         WF[⚡ Sequential Workflow<br/>Coordinator]
     end
@@ -96,7 +96,7 @@ anime_mvp/
 │   └── launch_streamlit.py        # Streamlit launcher script
 │
 ├── 🤖 Agent System  
-│   ├── sequential_workflow.py     # AutoGen workflow coordinator
+│   ├── sequential_workflow.py     # Custom workflow coordinator
 │   └── src/agents/
 │       ├── user_interface_agent.py    # Natural language processor
 │       └── data_retrieval_agent.py    # Athena query executor
@@ -150,8 +150,8 @@ anime_mvp/
   - Statistical analysis and aggregation
 
 ### Sequential Workflow Coordinator
-- **Pattern**: AutoGen sequential agent communication
-- **Function**: Orchestrates multi-agent conversations
+- **Pattern**: Custom sequential agent communication
+- **Function**: Orchestrates two-agent conversations
 - **Flow**: User Query → UI Agent → Data Agent → UI Agent → Response
 
 ## 📊 Data Pipeline

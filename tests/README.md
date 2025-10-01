@@ -5,7 +5,7 @@ This directory contains organized test files for the Anime MVP project.
 ## Test Categories
 
 ### 🤖 agents/
-Tests for AutoGen agents:
+Tests for custom agents:
 - `test_user_interface_agent.py` - UI Agent natural language processing tests
 - `test_data_retrieval_agent.py` - Data Retrieval Agent query execution tests  
 - `test_athena_agent.py` - Athena integration tests

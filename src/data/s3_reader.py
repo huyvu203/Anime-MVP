@@ -1,5 +1,5 @@
 """
-S3 Data Reader for AutoGen Agents
+S3 Data Reader for Custom Agents
 
 This module provides utilities for agents to read processed anime data directly from S3.
 """
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class S3DataReader:
-    """Read processed anime data from S3 for use by AutoGen agents."""
+    """Read processed anime data from S3 for use by custom agents."""
     
     def __init__(self, bucket_name: str = None, region: str = None):
         self.bucket_name = bucket_name or os.getenv("S3_BUCKET", "anime-data")

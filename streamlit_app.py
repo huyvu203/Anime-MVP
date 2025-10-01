@@ -102,7 +102,7 @@ def main():
         This Anime Assistant uses:
         - **GPT-4o-mini** for natural language processing
         - **AWS Athena** for querying anime data  
-        - **AutoGen** for agent coordination
+        - **Custom Agent System** for coordination
         
         ### 💡 Example Queries:
         - "What are the top rated anime?"
@@ -172,7 +172,7 @@ def main():
     
     # Footer
     st.markdown("---")
-    st.markdown("🚀 *Powered by AutoGen, GPT-4o-mini, and AWS Athena*")
+    st.markdown("🚀 *Powered by Custom Agents, GPT-4o-mini, and AWS Athena*")
 
 if __name__ == "__main__":
     main()

@@ -16,7 +16,7 @@ sys.path.insert(0, str(project_root / "src"))
 # Test categories
 TEST_CATEGORIES = {
     "agents": {
-        "description": "Tests for AutoGen agents (UI Agent, Data Retrieval Agent)",
+        "description": "Tests for custom agents (UI Agent, Data Retrieval Agent)",
         "files": [
             "test_user_interface_agent.py",
             "test_data_retrieval_agent.py", 
