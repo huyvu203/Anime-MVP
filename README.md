@@ -1,6 +1,6 @@
 # 🎌 Anime Assistant
 
-An intelligent anime assistant powered by AutoGen multi-agent architecture and GPT-4o-mini. Features a complete data pipeline from Jikan API ingestion through AWS processing to an interactive Streamlit chat interface for anime recommendations and discovery.
+An intelligent anime assistant powered by custom multi-agent architecture and GPT-5-mini. Features a complete data pipeline from Jikan API ingestion through AWS processing to an interactive Streamlit chat interface for anime recommendations and discovery.
 
 ## ✨ Features
 
@@ -55,7 +55,7 @@ flowchart TD
     end
     
     subgraph "Agent System"
-        UIA[🧠 User Interface Agent<br/>GPT-4o-mini + OpenAI API]
+        UIA[🧠 User Interface Agent<br/>GPT-5-mini + OpenAI API]
         DRA[📊 Data Retrieval Agent<br/>Athena SQL Queries]
         WF[⚡ Sequential Workflow<br/>Coordinator]
     end
@@ -132,7 +132,7 @@ anime_mvp/
 ## 🤖 Agent Architecture
 
 ### User Interface Agent
-- **Model**: GPT-4o-mini (temperature: 0.7)
+- **Model**: GPT-5-mini (configurable via OPENAI_MODEL env var, temperature: 0.7)
 - **Function**: Converts natural language queries into structured data requests
 - **Capabilities**: 
   - Query type classification (search_title, genre_filter, top_rated, etc.)
@@ -414,4 +414,4 @@ MIT License - see LICENSE file for details.
 
 ---
 
-*Built with AutoGen 🤖 • AWS ☁️ • Streamlit 🖥️ • GPT-4o-mini 🧠*
+*Built with Custom Agents 🤖 • AWS ☁️ • Streamlit 🖥️ • GPT-5-mini 🧠*

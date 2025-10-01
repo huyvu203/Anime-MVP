@@ -100,7 +100,7 @@ def main():
         st.header("🤖 About")
         st.markdown("""
         This Anime Assistant uses:
-        - **GPT-4o-mini** for natural language processing
+        - **GPT-5-mini** for natural language processing
         - **AWS Athena** for querying anime data  
         - **Custom Agent System** for coordination
         
@@ -172,7 +172,7 @@ def main():
     
     # Footer
     st.markdown("---")
-    st.markdown("🚀 *Powered by Custom Agents, GPT-4o-mini, and AWS Athena*")
+    st.markdown("🚀 *Powered by Custom Agents, GPT-5-mini, and AWS Athena*")
 
 if __name__ == "__main__":
     main()

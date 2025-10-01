@@ -69,6 +69,9 @@ class UserInterfaceAgent:
         self.client = OpenAI(api_key=self.api_key)
         self.name = "UserInterfaceAgent"
         
+        # Model configuration with environment variable support
+        self.model = os.getenv('OPENAI_MODEL', 'gpt-5-mini')
+        
         # System prompt that defines the agent's behavior
         self.system_prompt = """You are a friendly anime assistant that helps users discover and track anime.
 
@@ -160,13 +163,12 @@ Always be helpful and enthusiastic about anime!"""
             logger.info(f"Processing user query: {user_query}")
             
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=self.model,
                 messages=[
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": user_query}
                 ],
-                temperature=0.7,  # More creative for conversation
-                max_tokens=800
+                max_completion_tokens=800
             )
             
             response_content = response.choices[0].message.content
@@ -229,13 +231,12 @@ Guidelines:
 Make it feel like you're talking to a fellow anime fan!"""
 
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=self.model,
                 messages=[
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": format_prompt}
                 ],
-                temperature=0.7,
-                max_tokens=1200
+                max_completion_tokens=1200
             )
             
             formatted_response = response.choices[0].message.content
@@ -249,19 +250,27 @@ Make it feel like you're talking to a fellow anime fan!"""
 
     def _contains_data_request(self, response: str) -> bool:
         """Check if the response contains a data request JSON."""
-        return "```json" in response and "action" in response and "data_request" in response
+        # Check for both markdown-wrapped JSON and raw JSON
+        has_markdown_json = "```json" in response and "action" in response and "data_request" in response
+        has_raw_json = '"action": "data_request"' in response or "'action': 'data_request'" in response
+        return has_markdown_json or has_raw_json
 
     def _extract_data_request(self, response: str, original_query: str) -> DataRequest:
         """Extract and parse the data request from the AI response."""
         try:
-            # Find the JSON block
+            json_content = ""
+            
+            # Try to find markdown-wrapped JSON first
             start_idx = response.find('```json')
             end_idx = response.find('```', start_idx + 7)
             
-            if start_idx == -1 or end_idx == -1:
-                raise ValueError("Could not find JSON block in response")
+            if start_idx != -1 and end_idx != -1:
+                # Markdown-wrapped JSON
+                json_content = response[start_idx + 7:end_idx].strip()
+            else:
+                # Raw JSON - try to parse the entire response
+                json_content = response.strip()
             
-            json_content = response[start_idx + 7:end_idx].strip()
             request_data = json.loads(json_content)
             
             # Validate the request format
@@ -288,8 +297,8 @@ Make it feel like you're talking to a fellow anime fan!"""
         return {
             "name": self.name,
             "type": "user_interface",
-            "model": "gpt-4o-mini",
-            "temperature": 0.7,
+            "model": self.model,
+            "temperature": "default (1.0)",
             "capabilities": [
                 "Natural language query processing",
                 "Intent analysis and routing", 
