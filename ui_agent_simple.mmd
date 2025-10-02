@@ -1,0 +1,60 @@
+---
+title: User Interface Agent - Tools & Methods
+---
+flowchart TD
+    %% Input
+    USER[("👤 User")] --> QUERY["💬 Natural Language Query<br/>('what's my watch history?')"]
+    
+    %% UI Agent
+    subgraph UIA ["🧠 User Interface Agent"]
+        direction TB
+        
+        %% Core Methods
+        PROCESS["🔧 process_user_query()"]
+        FORMAT["🎨 format_data_response()"]
+        CAPABILITIES["📋 get_capabilities()"]
+        
+        %% GPT Integration
+        GPT["🤖 GPT-5-mini API<br/>(OpenAI Client)"]
+        
+        %% Helper Tools
+        subgraph TOOLS ["�️ Helper Tools"]
+            CONTAINS["_contains_data_request()<br/>(detects JSON)"]
+            EXTRACT["_extract_data_request()<br/>(parses JSON)"]
+        end
+    end
+    
+    %% Decision
+    DECISION{"🤔 Response Type"}
+    
+    %% Two main paths
+    DIRECT["💬 Direct Answer<br/>('Hello! I'm your anime assistant...')"]
+    DATA_REQ["📊 Data Request<br/>(structured JSON)"]
+    
+    %% Flow
+    QUERY --> PROCESS
+    PROCESS --> GPT
+    GPT --> TOOLS
+    TOOLS --> DECISION
+    
+    %% Routing
+    DECISION -->|"Can answer directly"| DIRECT
+    DECISION -->|"Needs data"| DATA_REQ
+    
+    %% Data formatting path
+    DATA_RETURN["📈 Raw Data Results<br/>(from Data Retrieval Agent)"] --> FORMAT
+    FORMAT --> GPT
+    GPT --> FORMATTED["✨ Formatted Response<br/>('Here's your watch history:<br/>1. Attack on Titan...')"]
+    
+    %% Styling
+    classDef agentNode fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    classDef methodNode fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef gptNode fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef toolNode fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef ioNode fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    
+    class UIA agentNode
+    class PROCESS,FORMAT,CAPABILITIES methodNode
+    class GPT gptNode
+    class TOOLS,CONTAINS,EXTRACT toolNode
+    class USER,QUERY,DIRECT,DATA_REQ,FORMATTED,DECISION,DATA_RETURN ioNode

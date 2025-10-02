@@ -19,16 +19,29 @@ UI Agent: Formats results → "Here are the top 5 anime from 2023..."
 
 import os
 import json
-import logging
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
 from openai import OpenAI
 from dotenv import load_dotenv
+from loguru import logger
+import sys
 
 # Load environment variables
 load_dotenv()
 
-logger = logging.getLogger(__name__)
+# Configure loguru logger for detailed UI Agent logging
+logger.remove()  # Remove default handler
+logger.add(
+    sys.stderr,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>UI_AGENT</cyan> | <level>{message}</level>",
+    level="DEBUG"
+)
+logger.add(
+    "logs/ui_agent_detailed.log",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | UI_AGENT | {message}",
+    level="DEBUG",
+    rotation="10 MB"
+)
 
 
 @dataclass
@@ -87,19 +100,39 @@ Your personality:
 - Provide clear, organized responses
 - Ask follow-up questions when appropriate
 
+## Step-by-Step Thinking Process
+
+ALWAYS think through your response step by step. For EVERY user query, follow this process:
+
+1. **ANALYZE**: What is the user asking for? What is their intent?
+2. **CATEGORIZE**: Does this need data retrieval or can I answer directly?
+3. **DECIDE**: If data needed, what specific query type and parameters?
+4. **EXECUTE**: Create the appropriate response (direct answer or JSON data request)
+
+Think out loud by briefly explaining your reasoning before giving your final response.
+
 ## Query Analysis and Routing
 
 When you receive a user query, determine if it needs data retrieval or if you can respond directly.
 
-### Queries that NEED data retrieval:
+### Queries that NEED data retrieval (CREATE JSON IMMEDIATELY):
 - Searching for specific anime: "Tell me about Naruto", "What's Attack on Titan about?"
 - Genre-based queries: "What are good action anime?", "Show me romance anime"
 - Year/season queries: "Best anime from 2023", "What's airing this season?"
 - Rating-based: "Top rated anime", "Highest scoring shows"
-- Personal history: "What am I watching?", "My completed list"
+- Personal history: "What am I watching?", "My completed list", "what's my watch history", "show my anime"
 - Recommendations: "Recommend something for me", "Based on my history"
 
+IMPORTANT: For watch history queries, ALWAYS create a data request immediately. Do NOT ask clarifying questions first.
+
 ### Queries you can answer DIRECTLY (no data needed):
+
+For direct responses, follow these steps:
+1. **RECOGNIZE**: "This is a [greeting|general question|help request|casual conversation]"  
+2. **RESPOND**: "I can answer this directly because..."
+3. **ENGAGE**: Provide a helpful, enthusiastic response
+
+Examples:
 - Greetings: "Hello", "Hi there"
 - General anime questions: "What is anime?", "How do ratings work?"
 - Help requests: "What can you help me with?"
@@ -107,7 +140,14 @@ When you receive a user query, determine if it needs data retrieval or if you ca
 
 ## Creating Data Requests
 
-When data is needed, create a JSON request in this EXACT format:
+When data is needed, follow these steps:
+
+1. **THINK**: "This query needs data because..."
+2. **IDENTIFY**: "The query type should be [search_title|genre_filter|currently_airing|top_rated|watch_history|recommendations]"
+3. **PARAMETERS**: "I need these parameters: title=X, genre=Y, limit=Z, etc."
+4. **CREATE**: Generate the JSON request immediately
+
+Create a JSON request IMMEDIATELY in this EXACT format. Do NOT ask clarifying questions first - be decisive and use reasonable defaults:
 
 ```json
 {
@@ -131,7 +171,12 @@ When data is needed, create a JSON request in this EXACT format:
 - "What's airing now?" → "currently_airing"
 - "Best anime from 2023" → "top_rated" with year="2023"
 - "What am I watching?" → "watch_history" with status="watching"
+- "What's my watch history?" → "watch_history" with status="" (all statuses)
+- "My completed anime" → "watch_history" with status="completed"
+- "Show my anime list" → "watch_history" with status=""
 - "Recommend something" → "recommendations"
+
+CRITICAL: Watch history queries should NEVER ask for clarification. Create the data request immediately with reasonable defaults.
 
 ## Response Formatting
 
@@ -142,9 +187,29 @@ When formatting data results, make responses:
 - Use markdown for better readability
 - Suggest follow-up questions
 
+## Step-by-Step Example
+
+User: "What's my watch history?"
+
+Your thinking process:
+1. **ANALYZE**: "The user wants to see their personal watch history"
+2. **CATEGORIZE**: "This needs data retrieval - it's about personal data"  
+3. **DECIDE**: "Query type: watch_history, parameters: user_id='personal_user', status='', limit=20"
+4. **EXECUTE**: Create JSON data request immediately
+
+## Special Handling for Watch History Queries
+
+For ANY watch history related query ("what's my watch history", "my anime", "what am I watching", etc.):
+- IMMEDIATELY create a "watch_history" data request  
+- Use reasonable defaults: limit=20, status="" (for all statuses)
+- Do NOT ask clarifying questions - let the Data Retrieval Agent handle the query intelligently
+
 Always be helpful and enthusiastic about anime!"""
 
-        logger.info(f"User Interface Agent initialized with API key: {self.api_key[:20]}...")
+        logger.info(f"🚀 User Interface Agent initialized")
+        logger.debug(f"API Key: {self.api_key[:20]}...{self.api_key[-4:]}")
+        logger.debug(f"Model: {self.model}")
+        logger.debug(f"System prompt length: {len(self.system_prompt)} characters")
 
     def process_user_query(self, user_query: str) -> Dict[str, Any]:
         """
@@ -160,7 +225,11 @@ Always be helpful and enthusiastic about anime!"""
             - {"type": "error", "message": str} - error occurred
         """
         try:
-            logger.info(f"Processing user query: {user_query}")
+            logger.info(f"📝 STARTING query processing: '{user_query}'")
+            logger.debug(f"Query length: {len(user_query)} characters")
+            
+            # Log the step-by-step thinking process the agent should follow
+            logger.debug("🧠 Agent should follow: ANALYZE → CATEGORIZE → DECIDE → EXECUTE")
             
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -172,24 +241,43 @@ Always be helpful and enthusiastic about anime!"""
             )
             
             response_content = response.choices[0].message.content
-            logger.debug(f"Raw AI response: {response_content}")
+            logger.debug(f"📤 Raw GPT response ({len(response_content)} chars): {response_content[:200]}...")
+            logger.trace(f"📤 Full GPT response: {response_content}")
+            
+            # Log the decision-making process
+            logger.info("🔍 ANALYZING response type...")
             
             # Check if this is a data request (contains JSON)
-            if self._contains_data_request(response_content):
+            contains_data_request = self._contains_data_request(response_content)
+            logger.debug(f"Contains data request: {contains_data_request}")
+            
+            if contains_data_request:
+                logger.info("📊 DECISION: Data request detected - routing to Data Retrieval Agent")
                 data_request = self._extract_data_request(response_content, user_query)
+                
+                # Log the extracted data request details
+                request_dict = data_request.to_dict()
+                logger.info(f"🎯 DATA REQUEST created:")
+                logger.info(f"  • Query Type: {request_dict.get('query_type')}")
+                logger.info(f"  • Parameters: {request_dict.get('parameters')}")
+                logger.info(f"  • Original Query: {request_dict.get('user_query')}")
+                logger.debug(f"📋 Complete data request: {json.dumps(request_dict, indent=2)}")
+                
                 return {
                     "type": "data_request",
                     "request": data_request
                 }
             else:
-                # Direct response - no data needed
+                logger.info("💬 DECISION: Direct response - no external data needed")
+                logger.debug(f"Direct response preview: {response_content[:100]}...")
                 return {
                     "type": "direct_response", 
                     "response": response_content
                 }
                 
         except Exception as e:
-            logger.error(f"Error processing user query: {e}")
+            logger.error(f"❌ ERROR processing user query: {e}")
+            logger.exception("Full error traceback:")
             return {
                 "type": "error",
                 "message": f"I encountered an error processing your request: {str(e)}"
@@ -207,7 +295,17 @@ Always be helpful and enthusiastic about anime!"""
             Formatted conversational response
         """
         try:
-            logger.info(f"Formatting data response for query: {original_query}")
+            logger.info(f"🎨 FORMATTING data response for query: '{original_query}'")
+            
+            # Log data analysis
+            data_summary = {
+                "status": data_results.get("status", "unknown"),
+                "count": data_results.get("count", 0),
+                "query_type": data_results.get("query_type", "unknown"),
+                "has_results": bool(data_results.get("results"))
+            }
+            logger.debug(f"📊 Data summary: {data_summary}")
+            logger.trace(f"📊 Raw data results: {json.dumps(data_results, indent=2)}")
             
             # Create a prompt for formatting the response
             format_prompt = f"""The user asked: "{original_query}"
@@ -230,6 +328,8 @@ Guidelines:
 
 Make it feel like you're talking to a fellow anime fan!"""
 
+            logger.debug(f"🎭 Sending formatting prompt ({len(format_prompt)} chars)")
+            
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -240,12 +340,15 @@ Make it feel like you're talking to a fellow anime fan!"""
             )
             
             formatted_response = response.choices[0].message.content
-            logger.debug(f"Formatted response: {formatted_response[:100]}...")
+            logger.info(f"✨ FORMATTED response created ({len(formatted_response)} chars)")
+            logger.debug(f"Formatted response preview: {formatted_response[:200]}...")
+            logger.trace(f"Full formatted response: {formatted_response}")
             
             return formatted_response
             
         except Exception as e:
-            logger.error(f"Error formatting data response: {e}")
+            logger.error(f"❌ ERROR formatting data response: {e}")
+            logger.exception("Full formatting error traceback:")
             return f"I got the data but had trouble formatting it nicely. Here's what I found: {str(data_results)}"
 
     def _contains_data_request(self, response: str) -> bool:
@@ -253,12 +356,23 @@ Make it feel like you're talking to a fellow anime fan!"""
         # Check for both markdown-wrapped JSON and raw JSON
         has_markdown_json = "```json" in response and "action" in response and "data_request" in response
         has_raw_json = '"action": "data_request"' in response or "'action': 'data_request'" in response
-        return has_markdown_json or has_raw_json
+        
+        result = has_markdown_json or has_raw_json
+        
+        logger.debug(f"🔍 JSON detection analysis:")
+        logger.debug(f"  • Has markdown JSON: {has_markdown_json}")
+        logger.debug(f"  • Has raw JSON: {has_raw_json}")
+        logger.debug(f"  • Final decision: {result}")
+        
+        return result
 
     def _extract_data_request(self, response: str, original_query: str) -> DataRequest:
         """Extract and parse the data request from the AI response."""
+        logger.debug(f"🔧 EXTRACTING data request from response...")
+        
         try:
             json_content = ""
+            extraction_method = ""
             
             # Try to find markdown-wrapped JSON first
             start_idx = response.find('```json')
@@ -267,34 +381,62 @@ Make it feel like you're talking to a fellow anime fan!"""
             if start_idx != -1 and end_idx != -1:
                 # Markdown-wrapped JSON
                 json_content = response[start_idx + 7:end_idx].strip()
+                extraction_method = "markdown-wrapped"
+                logger.debug(f"📝 Found markdown-wrapped JSON at positions {start_idx}-{end_idx}")
             else:
                 # Raw JSON - try to parse the entire response
                 json_content = response.strip()
+                extraction_method = "raw-response"
+                logger.debug(f"📝 No markdown wrapper found, treating as raw JSON")
+            
+            logger.debug(f"📋 JSON extraction method: {extraction_method}")
+            logger.debug(f"📋 JSON content length: {len(json_content)} chars")
+            logger.trace(f"📋 Raw JSON content: {json_content}")
             
             request_data = json.loads(json_content)
+            logger.debug(f"✅ JSON parsing successful")
             
             # Validate the request format
             if request_data.get("action") != "data_request":
-                raise ValueError("Invalid request format - missing 'data_request' action")
+                raise ValueError(f"Invalid request format - expected 'data_request', got '{request_data.get('action')}'")
             
-            return DataRequest(
+            logger.debug(f"✅ JSON validation successful")
+            
+            data_request = DataRequest(
                 query_type=request_data.get("query_type"),
                 parameters=request_data.get("parameters", {}),
                 original_query=original_query
             )
             
+            logger.info(f"✨ DATA REQUEST successfully extracted:")
+            logger.info(f"  • Method: {extraction_method}")
+            logger.info(f"  • Query Type: {data_request.query_type}")
+            logger.info(f"  • Parameters: {data_request.parameters}")
+            
+            return data_request
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"❌ JSON parsing failed: {e}")
+            logger.debug(f"Failed JSON content: {json_content[:500]}...")
         except Exception as e:
-            logger.error(f"Error extracting data request: {e}")
-            # Fallback - create a generic search request
-            return DataRequest(
-                query_type="search_title",
-                parameters={"title": original_query, "limit": 10},
-                original_query=original_query
-            )
+            logger.error(f"❌ Error extracting data request: {e}")
+            
+        # Fallback - create a generic search request
+        logger.warning(f"🔄 FALLBACK: Creating generic search request")
+        fallback_request = DataRequest(
+            query_type="search_title",
+            parameters={"title": original_query, "limit": 10},
+            original_query=original_query
+        )
+        
+        logger.info(f"🔄 Fallback request created: {fallback_request.to_dict()}")
+        return fallback_request
 
     def get_capabilities(self) -> Dict[str, Any]:
         """Return information about the agent's capabilities."""
-        return {
+        logger.debug("📋 Retrieving agent capabilities")
+        
+        capabilities = {
             "name": self.name,
             "type": "user_interface",
             "model": self.model,
@@ -315,6 +457,9 @@ Make it feel like you're talking to a fellow anime fan!"""
                 "recommendations"
             ]
         }
+        
+        logger.trace(f"📋 Agent capabilities: {json.dumps(capabilities, indent=2)}")
+        return capabilities
 
 
 # Convenience function for testing
@@ -325,8 +470,6 @@ def create_user_interface_agent(api_key: Optional[str] = None) -> UserInterfaceA
 
 if __name__ == "__main__":
     """Simple test of the User Interface Agent."""
-    
-    logging.basicConfig(level=logging.INFO)
     
     # Test queries
     test_queries = [

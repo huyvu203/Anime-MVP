@@ -1,0 +1,70 @@
+---
+title: Data Retrieval Agent - Tools & Methods
+---
+flowchart TD
+    %% Input
+    REQUEST["📊 Data Request<br/>(from UI Agent)"] --> AGENT
+    
+    %% Data Retrieval Agent
+    subgraph AGENT ["🗄️ Data Retrieval Agent"]
+        direction TB
+        
+        %% Core Method
+        PROCESS["🔧 process_data_request()"]
+        
+        %% LLM Decision Making
+        LLM_DECIDE["🧠 _decide_data_source()<br/>(GPT-5-mini)"]
+        
+        %% Decision Point
+        DECISION{"🤔 Data Source Decision"}
+        
+        %% Personal Data Tools
+        subgraph PERSONAL_TOOLS ["👤 Personal Data Tools"]
+            GET_HISTORY["_get_user_watch_history()"]
+            GET_RECS["_get_user_recommendations()"]
+        end
+        
+        %% General Data Tools
+        subgraph GENERAL_TOOLS ["🌐 General Data Tools"]
+            SEARCH_TITLE["_search_anime_by_title()"]
+            GET_GENRE["_get_anime_by_genre()"]
+            GET_AIRING["_get_currently_airing()"]
+            GET_TOP["_get_top_rated_anime()"]
+        end
+        
+        %% Data Sources
+        SQLITE["💾 SQLite Database"]
+        ATHENA["☁️ AWS Athena/S3"]
+    end
+    
+    %% Flow
+    REQUEST --> PROCESS
+    PROCESS --> LLM_DECIDE
+    LLM_DECIDE --> DECISION
+    
+    %% Routing
+    DECISION -->|"Personal"| PERSONAL_TOOLS
+    DECISION -->|"General"| GENERAL_TOOLS
+    
+    %% Data Access
+    PERSONAL_TOOLS --> SQLITE
+    GENERAL_TOOLS --> ATHENA
+    
+    %% Output
+    SQLITE --> RESULTS["📈 Structured Results"]
+    ATHENA --> RESULTS
+    
+    %% Styling
+    classDef agentNode fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px
+    classDef methodNode fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef llmNode fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef toolNode fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef dataNode fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef ioNode fill:#f1f8e9,stroke:#558b2f,stroke-width:2px
+    
+    class AGENT agentNode
+    class PROCESS methodNode
+    class LLM_DECIDE llmNode
+    class PERSONAL_TOOLS,GENERAL_TOOLS,GET_HISTORY,GET_RECS,SEARCH_TITLE,GET_GENRE,GET_AIRING,GET_TOP toolNode
+    class SQLITE,ATHENA dataNode
+    class REQUEST,RESULTS,DECISION ioNode
